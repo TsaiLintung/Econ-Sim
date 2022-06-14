@@ -5,6 +5,7 @@ class AgentList {
         this.path = path;
         this.list = [];
         this.playground = playground;
+        this.hightlightIndex = 0;
     }
 
     addAgent(pos = null){
@@ -22,6 +23,10 @@ class AgentList {
 
     getAgent(index){return this.list[index];}
 
+    getHightlight(){
+        return this.list[this.hightlightIndex];
+    }
+
     draw(){
         for (var i = 0; i < this.list.length; i++){
             this.list[i].draw();
@@ -32,7 +37,11 @@ class AgentList {
         for (var i = 0; i < this.list.length; i++){
             this.list[i].update();
         }
+
+        this.checkCollide()
     }
+
+    checkCollide(){}
 }
 
 
@@ -46,6 +55,7 @@ class Agent {
         this.size = size;
         this.pic.resize(this.size, 0);
         this.playgound = playground;
+        this.hightlight = false;
     }
 
     update(){
@@ -61,5 +71,27 @@ class Agent {
 
     }
 
-    draw(){image(this.pic, this.pos.x, this.pos.y);}
+    draw(){
+        image(this.pic, this.pos.x, this.pos.y);
+        if(this.highlight){
+            noFill();
+            stroke(51);
+            circle(this.pos.x, this.pos.y, this.size);
+        }
+    }
+
+    pointCollide(x,y){
+        return collidePointCircle(x,y,this.pos.x,this.pos.y,this.size)
+    }
+
+    copy(agent){
+        this.id = agent.id;
+        this.pos = agent.pos;
+        this.speed = agent.speed;
+        this.direction = agent.direction;
+        this.pic = agent.pic;
+        this.size = agent.size;
+        this.playgound = agent.playground;
+        this.hightlight = agent.hightlight;
+    }
 }
