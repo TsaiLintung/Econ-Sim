@@ -3,24 +3,30 @@
 const PARAMS = {
   speed: 5,
   fps:60,
-  bgColor: "#FFFFF0"
+  bgColor: "#FFFFF0",
+  agentCount: 10,
 };
-let x = 0;
 
 // setup the system parameters
 let windowHeight, windowWidth;
 
-
 //setup the paths for assets
 const PATHS = {
-  'dino': 'assets/graphics/player/animation/dino-0.png'
+  dino:"assets/graphics/player/animation/dino-0.png"
 };
+
+const playground = {
+  xmax: window.innerWidth,
+  xmin:0,
+  ymax: window.innerHeight,
+  ymin:0
+}
 
 //setup UI elements
 var pane, sys;
 
 // this is called before setsup
-function preload() {}
+function preload(){}
 
 //this is called when the sim started.
 function setup() {
@@ -29,7 +35,9 @@ function setup() {
   windowHeight = window.innerHeight;
   windowWidth = window.innerWidth; 
 
-  agent = new Agent(10, 500, PARAMS.speed, PATHS.dino);
+  agents = new AgentList(50,PARAMS.speed,PATHS.dino,playground);
+
+  for (i = 0; i <PARAMS.agentCount; i++) {agents.addAgent();}
 
   pane = new Tweakpane.Pane();
   sys = pane.addFolder({title:"System"});
@@ -37,19 +45,20 @@ function setup() {
   sys.addInput(PARAMS, 'fps', {min :30, max : 120});
 
   focusAgent = pane.addFolder({title:"Focus Agent"});
-  focusAgent.addMonitor(agent.pos, 'x')
-  focusAgent.addMonitor(agent.pos, 'y')
+  focusAgent.addMonitor(agents.getAgent(0), 'id')
+  focusAgent.addMonitor(agents.getAgent(0).pos, 'x')
+  focusAgent.addMonitor(agents.getAgent(0).pos, 'y')
 }
 
 //this is called every frame
 function draw() {
   background(PARAMS.bgColor);
 
-  agent.update();
-  image(agent.pic, agent.pos.x, agent.pos.y);
+  agents.update();
+  agents.draw();
   
   frameRate(PARAMS.fps);
-  agent.speed = PARAMS.speed;
+  //agent.speed = PARAMS.speed;
   pane.refresh();
 }
 
