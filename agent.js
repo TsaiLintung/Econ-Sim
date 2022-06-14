@@ -63,7 +63,7 @@ class Agent {
         this.pos.x += this.speed*cos(this.direction);
         this.pos.y += this.speed*sin(this.direction);
 
-        //handle out of bounds
+        //handle out of bounds, currently does not sync with the playgound outside
         if (this.pos.x >= this.playgound.xmax){this.direction = PI - this.direction; this.pos.x -= this.speed};
         if (this.pos.x <= this.playgound.xmin){this.direction = PI - this.direction; this.pos.x += this.speed};
         if (this.pos.y >= this.playgound.ymax){this.direction = - this.direction; this.pos.y -= this.speed};

@@ -1,11 +1,12 @@
 
 //setup the economc parameters
-const PARAMS = {
+var PARAMS = {
   speed: 5,
   size: 40,
-  fps:60,
+  target_fps:60,
+  fps:0,
   bgColor: "#FFFFF0",
-  agentCount: 10,
+  agentCount: 100,
 };
 
 // setup the system parameters
@@ -16,6 +17,8 @@ const PATHS = {
   dino:"assets/graphics/player/animation/dino-0.png"
 };
 
+
+// setup the playground for agents
 const playground = {
   xmax: window.innerWidth,
   xmin:0,
@@ -32,7 +35,7 @@ function preload(){}
 //this is called when the sim started.
 function setup() {
   createCanvas(window.innerWidth, window.innerHeight);
-  frameRate(PARAMS.fps);
+  frameRate(PARAMS.target_fps);
   imageMode(CENTER);
   windowHeight = window.innerHeight;
   windowWidth = window.innerWidth; 
@@ -45,14 +48,15 @@ function setup() {
 
   pane = new Tweakpane.Pane();
   sys = pane.addFolder({title:"System"});
-  sys.addInput(PARAMS, 'fps', {min :30, max : 120});
+  sys.addMonitor(PARAMS, 'fps',{format: (v) => round(v)});
+  sys.addMonitor(PARAMS, 'fps',{view: 'graph'});
 
   highlightAgent = new Agent(null, null, 1, null, null, PATHS.dino);
   highlightAgent.copy(agents.getHightlight());
   agents.getAgent(0).highlight = true;
 
   focusAgent = pane.addFolder({title:"Focus Agent"});
-  focusAgent.addMonitor(highlightAgent, 'id');
+  focusAgent.addMonitor(highlightAgent, 'id',{format: (v) => round(v)});
   focusAgent.addMonitor(highlightAgent.pos, 'x');
   focusAgent.addMonitor(highlightAgent.pos, 'y');
 }
@@ -68,9 +72,11 @@ function draw() {
   //update hightlight agent
   highlightAgent.copy(agents.getHightlight());
   
+  PARAMS.fps = frameRate();
 
-  frameRate(PARAMS.fps);
   pane.refresh();
+  
+  
 }
 
 //this is called when the screen is resized.
@@ -78,6 +84,13 @@ function windowResized() {
   resizeCanvas(window.innerWidth, window.innerHeight);
   windowHeight = window.innerHeight;
   windowWidth = window.innerWidth;  
+
+  playground = {
+    xmax: window.innerWidth,
+    xmin:0,
+    ymax: window.innerHeight,
+    ymin:0
+  }
 }
 
 
@@ -86,7 +99,7 @@ function mouseClicked(){
 
   //if clicked on an agent, switch the highlight
   for (var i = 0; i < agents.list.length; i++) {
-      if (agents.list[i].pointCollide(mouseX, mouseY)){
+      if (agents.getAgent(i).pointCollide(mouseX, mouseY)){
         agents.getAgent(agents.hightlightIndex).highlight = false;
         agents.hightlightIndex = i;
         agents.getAgent(i).highlight = true;
