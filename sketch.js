@@ -3,5 +3,5 @@ function setup() {
 }
 
 function draw() {
-  background(220);
+  text("hello new world", 20, 20);
 }
