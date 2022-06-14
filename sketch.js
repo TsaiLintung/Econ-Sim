@@ -1,12 +1,12 @@
 
 //setup the economc parameters
 var PARAMS = {
-  speed: 5,
+  speed: 10,
   size: 40,
   target_fps:60,
   fps:0,
   bgColor: "#FFFFF0",
-  agentCount: 100,
+  agentCount: 150,
 };
 
 // setup the system parameters

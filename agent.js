@@ -41,7 +41,15 @@ class AgentList {
         this.checkCollide()
     }
 
-    checkCollide(){}
+    checkCollide(){
+        for (var i = 0; i < this.list.length; i++){
+            for (var j = 0; j < this.list.length; j++){
+                if( !(i==j) & this.getAgent(i).agentCollide(this.getAgent(j))){
+                    this.getAgent(i).meet(this.getAgent(j));
+                }
+            }
+        }
+    }
 }
 
 
@@ -84,6 +92,10 @@ class Agent {
         return collidePointCircle(x,y,this.pos.x,this.pos.y,this.size)
     }
 
+    agentCollide(otherAgent){
+        return collideCircleCircle(this.pos.x,this.pos.y,this.size, otherAgent.pos.x, otherAgent.pos.y, otherAgent.size)
+    }
+
     copy(agent){
         this.id = agent.id;
         this.pos = agent.pos;
@@ -93,5 +105,9 @@ class Agent {
         this.size = agent.size;
         this.playgound = agent.playground;
         this.hightlight = agent.hightlight;
+    }
+
+    meet(otherAgent){
+        //Currently does nothing
     }
 }
