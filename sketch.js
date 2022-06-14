@@ -3,5 +3,8 @@ function setup() {
 }
 
 function draw() {
-  text("hello new world", 20, 20);
+  background(220);
+  if(mouseIsPressed){pressed();}
+  else{notpressed();}
+  ellipse(mouseX,mouseY,80,80);
 }
