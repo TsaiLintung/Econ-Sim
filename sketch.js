@@ -1,12 +1,12 @@
 
 //setup the economc parameters
 var PARAMS = {
-  speed: 10,
+  speed: 2,
   size: 40,
   target_fps:60,
   fps:0,
   bgColor: "#FFFFF0",
-  agentCount: 150,
+  agentCount: 10,
 };
 
 // setup the system parameters
@@ -14,7 +14,7 @@ let windowHeight, windowWidth;
 
 //setup the paths for assets
 const PATHS = {
-  dino:"assets/graphics/player/animation/dino-0.png"
+  dino:"assets/graphics/player/gdino-walk.gif"
 };
 
 

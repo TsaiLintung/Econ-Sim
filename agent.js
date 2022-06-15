@@ -52,6 +52,7 @@ class AgentList {
     }
 }
 
+////////////////////////////////////////////////////////////////////////////////////////////////
 
 class Agent {
     constructor(id,pos,size,speed,playground,path){
@@ -77,10 +78,27 @@ class Agent {
         if (this.pos.y >= this.playgound.ymax){this.direction = - this.direction; this.pos.y -= this.speed};
         if (this.pos.y <= this.playgound.ymin){this.direction = - this.direction; this.pos.y += this.speed};
 
+        //make angle stay between PI and -PI
+        if (this.direction > PI){ this.direction -= 2*PI;}
+        if (this.direction < -PI){ this.direction += 2*PI;}
+
     }
 
     draw(){
-        image(this.pic, this.pos.x, this.pos.y);
+        push();
+        if (this.direction >= PI/2 | this.direction <= -PI/2){
+
+            
+            scale(-1,1);
+
+            //the coordinate is also flipped so need to be -this.x
+            image(this.pic, -this.pos.x, this.pos.y);
+
+            
+
+        } else {image(this.pic, this.pos.x, this.pos.y); }
+        pop();
+        
         if(this.highlight){
             noFill();
             stroke(51);
@@ -108,6 +126,6 @@ class Agent {
     }
 
     meet(otherAgent){
-        //Currently does nothing
+        //Currently does nothing 
     }
 }
