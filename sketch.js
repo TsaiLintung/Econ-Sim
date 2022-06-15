@@ -1,5 +1,5 @@
 
-//setup the economc parameters
+//setup the parameters
 var PARAMS = {
   speed: 2,
   size: 50,
@@ -7,10 +7,9 @@ var PARAMS = {
   target_fps:60,
   fps:0,
   bgColor: "#FFFFF0",
-  agentCount: 90,
+  agentCount: 100, // my computer can run at 60fps with around 120 agents.
+  discount: 0.999
 };
-
-// setup the system parameters
 let windowHeight, windowWidth;
 
 //setup the paths for assets
@@ -28,14 +27,14 @@ const playground = {
   ymin:0
 }
 
-//setup UI elements
+//initialize UI elements
 var pane, sys;
-var agentId, agentType, agentPos;
+var agentId = null, agentType, agentPos;
 
-// this is called before setsup
+//called before setup
 function preload(){}
 
-//this is called when the sim started.
+//called when the sim started.
 function setup() {
   createCanvas(window.innerWidth, window.innerHeight);
   frameRate(PARAMS.target_fps);
@@ -53,13 +52,11 @@ function setup() {
   sys.addMonitor(PARAMS, 'fps',{view: 'graph'});
 
   hlAgent = pane.addFolder({title:"Highlight Agent"});
-  agentId = hlAgent.addMonitor(agents.getHightlight(), 'id',{format: (v) => round(v)});
-  agentType = hlAgent.addMonitor(agents.getHightlight(), 'type');
-  agentPos = hlAgent.addInput(agents.getHightlight(), "pos", { x: {min: playground.xmin, max: playground.xmax}, y: {min: playground.ymin, max: playground.ymax}});
-  agents.getAgent(0).highlight = true;
+  updateHighlight(0);
+
 }
 
-//this is called every frame
+//called every frame
 function draw() {
   background(PARAMS.bgColor);
 
@@ -68,12 +65,30 @@ function draw() {
   
   PARAMS.fps = frameRate();
 
+  //get the new values for the UI to work
   pane.refresh();
-  
-  
 }
 
-//this is called when the screen is resized.
+//updates the Highlight agent panel to highlight the new agent
+function updateHighlight(newIndex)  {
+  agents.getAgent(agents.hightlightIndex).highlight = false;
+  agents.hightlightIndex = newIndex;
+  agents.getAgent(newIndex).highlight = true;
+
+  if (agentId != null) {
+    agentId.dispose();
+    agentType.dispose();
+    agentPos.dispose();
+  }
+
+  agentId = hlAgent.addMonitor(agents.getHightlight(), 'id',{format: (v) => round(v)});
+  agentType = hlAgent.addMonitor(agents.getHightlight(), 'type');
+  agentPos = hlAgent.addInput(agents.getHightlight(), "pos", { x: {min: playground.xmin, max: playground.xmax}, y: {min: playground.ymin, max: playground.ymax}});
+}
+
+
+
+//called when the screen is resized.
 function windowResized() {
   resizeCanvas(window.innerWidth, window.innerHeight);
   windowHeight = window.innerHeight;
@@ -94,21 +109,9 @@ function mouseClicked(){
   //if clicked on an agent, switch the highlight
   for (var i = 0; i < agents.list.length; i++) {
       if (agents.getAgent(i).pointCollide(mouseX, mouseY)){
-        agents.getAgent(agents.hightlightIndex).highlight = false;
-        agents.hightlightIndex = i;
-        agents.getAgent(i).highlight = true;
-
-        agentId.dispose();
-        agentType.dispose();
-        agentPos.dispose();
-
-        agentId = hlAgent.addMonitor(agents.getHightlight(), 'id',{format: (v) => round(v)});
-        agentType = hlAgent.addMonitor(agents.getHightlight(), 'type');
-        agentPos = hlAgent.addInput(agents.getHightlight(), "pos", { x: {min: playground.xmin, max: playground.xmax}, y: {min: playground.ymin, max: playground.ymax}});
-
+        updateHighlight(i);
       }
   }
-
 }
 
 
