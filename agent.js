@@ -44,11 +44,12 @@ class AgentList {
         for (var i = 0; i < this.list.length; i++){
             this.list[i].update();
         }
-
         this.checkCollide()
     }
 
     checkCollide(){
+
+        //Should implement quad tree or at least grid system to optimize performance
         for (var i = 0; i < this.list.length; i++){
             for (var j = 0; j < this.list.length; j++){
                 if( !(i==j) & this.getAgent(i).agentCollide(this.getAgent(j))){
@@ -69,7 +70,7 @@ class Agent {
         this.speed = speed;
         this.direction = random(-PI,PI);
         this.pic = loadImage(path);
-        
+        this.utility = 0;
         this.size = size;
         this.playgound = playground;
         this.hightlight = false;
@@ -82,7 +83,7 @@ class Agent {
         this.pos.x += this.speed*cos(this.direction);
         this.pos.y += this.speed*sin(this.direction);
 
-        //handle out of bounds, currently does not sync with the playgound outside
+        //handle out of bounds, currently does not sync with the global playgound, so need to reset agents after screen resize
         if (this.pos.x >= this.playgound.xmax){this.direction = PI - this.direction; this.pos.x -= this.speed};
         if (this.pos.x <= this.playgound.xmin){this.direction = PI - this.direction; this.pos.x += this.speed};
         if (this.pos.y >= this.playgound.ymax){this.direction = - this.direction; this.pos.y -= this.speed};
@@ -92,25 +93,28 @@ class Agent {
         if (this.direction > PI){ this.direction -= 2*PI;}
         if (this.direction < -PI){ this.direction += 2*PI;}
 
-        this.pic.delay(PARAMS.gifDelay);
-        //this.pic.resize(40,0); resize function seems to hinder performance a lot!, but it cannot be called in setup.......
+        this.pic.delay(PARAMS.gifDelay); // call a global parameter here, just too lazy...
+
+        this.utility = this.utility*PARAMS.discount;
     }
 
     draw(){
+
+        // draw the dino
         push();
-        
-        let scaling = this.size/this.pic.width;
-        scale(scaling, scaling);
+            let scaling = this.size/this.pic.width;
+            //scale the image, but is kind of dangerous and perhaps slow?
+            scale(scaling, scaling);
+            if (this.direction >= PI/2 | this.direction <= -PI/2){
+                scale(-1,1);
 
-        if (this.direction >= PI/2 | this.direction <= -PI/2){
-            scale(-1,1);
+                //the coordinate is also flipped and scaled so need to be -this.x/scaling
+                image(this.pic, -this.pos.x/scaling, this.pos.y/scaling);
 
-            //the coordinate is also flipped so need to be -this.x
-            image(this.pic, -this.pos.x/scaling, this.pos.y/scaling);
-
-        } else {image(this.pic, this.pos.x/scaling, this.pos.y/scaling); }
+            } else {image(this.pic, this.pos.x/scaling, this.pos.y/scaling);}
         pop();
         
+        // draw the highlight circle
         if(this.highlight){
             noFill();
             stroke(51);
@@ -135,6 +139,7 @@ class Agent {
         this.size = agent.size;
         this.playgound = agent.playground;
         this.hightlight = agent.hightlight;
+        this.utility = agent.utility;
     }
 
     meet(otherAgent){
