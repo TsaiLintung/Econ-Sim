@@ -1,22 +1,29 @@
 class AgentList {
-    constructor(size, speed, path, playground){
+    constructor(size, speed, paths, playground){
         this.size = size; 
         this.speed = speed; 
-        this.path = path;
+        this.paths = paths;
         this.list = [];
         this.playground = playground;
         this.hightlightIndex = 0;
+        this.lastDino = "Y";
     }
 
-    addAgent(pos = null){
+    addAgents(count){
 
-        if (pos == null){ pos = {
-            x : random(this.playground.xmin, this.playground.xmax),
-            y : random(this.playground.ymin, this.playground.ymax)
-            };
-        };
+        var path, pos
+        
+        for (var i = 0; i < count; i++){
 
-        this.list.push(new Agent(this.list.length, pos, this.size , this.speed, this.playground, this.path));
+            pos = {x:random(this.playground.xmin, this.playground.xmax),
+                   y:random(this.playground.ymin, this.playground.ymax)};
+
+            if (this.lastDino == "Y"){this.lastDino = "R"; path = this.paths.rdino;} 
+            else if (this.lastDino == "R") {this.lastDino = "G"; path = this.paths.gdino;}
+            else if (this.lastDino == "G"){this.lastDino = "Y"; path = this.paths.ydino;} 
+    
+            this.list.push(new Agent(this.list.length, this.lastDino ,pos, this.size , this.speed, this.playground, path));
+        }
     }
 
     push(agent){this.list.push(agent);}
@@ -55,16 +62,19 @@ class AgentList {
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
 class Agent {
-    constructor(id,pos,size,speed,playground,path){
+    constructor(id,type,pos,size,speed,playground,path){
         this.id = id;
+        this.type = type;
         this.pos = pos;
         this.speed = speed;
         this.direction = random(-PI,PI);
         this.pic = loadImage(path);
+        
         this.size = size;
-        this.pic.resize(this.size, 0);
         this.playgound = playground;
         this.hightlight = false;
+
+        //somehow the picture functions cannot be called in the constructor.
     }
 
     update(){
@@ -82,21 +92,23 @@ class Agent {
         if (this.direction > PI){ this.direction -= 2*PI;}
         if (this.direction < -PI){ this.direction += 2*PI;}
 
+        this.pic.delay(PARAMS.gifDelay);
+        //this.pic.resize(40,0); resize function seems to hinder performance a lot!, but it cannot be called in setup.......
     }
 
     draw(){
         push();
-        if (this.direction >= PI/2 | this.direction <= -PI/2){
+        
+        let scaling = this.size/this.pic.width;
+        scale(scaling, scaling);
 
-            
+        if (this.direction >= PI/2 | this.direction <= -PI/2){
             scale(-1,1);
 
             //the coordinate is also flipped so need to be -this.x
-            image(this.pic, -this.pos.x, this.pos.y);
+            image(this.pic, -this.pos.x/scaling, this.pos.y/scaling);
 
-            
-
-        } else {image(this.pic, this.pos.x, this.pos.y); }
+        } else {image(this.pic, this.pos.x/scaling, this.pos.y/scaling); }
         pop();
         
         if(this.highlight){
