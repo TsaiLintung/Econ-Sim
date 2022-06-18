@@ -8,9 +8,15 @@ var PARAMS = {
   fps:0,
   bgColor: "#FFFFF0",
   agentCount: 100, // my computer can run at 60fps with around 120 agents.
-  discount: 0.999
+  discount: 0.999,
+  coolDown: 120, // Cooldown for meeting is 90 frame
+  logLength: 10
 };
 let windowHeight, windowWidth;
+
+var OPTIONS ={
+  id: 1 // the highlighed agent's id. 
+}
 
 //setup the paths for assets
 const PATHS = {
@@ -20,7 +26,7 @@ const PATHS = {
 };
 
 // setup the playground for agents
-const playground = {
+var PLAYGROUND = {
   xmax: window.innerWidth,
   xmin:0,
   ymax: window.innerHeight,
@@ -29,7 +35,11 @@ const playground = {
 
 //initialize UI elements
 var pane, sys;
-var agentId = null, agentType, agentPos;
+var agentId = null, agentType, agentUtility ,agentPos, agentLog,hlAgent;
+
+//define the production and utility functions
+function consumptionGain(quantity){return quantity**(1/2)}
+function productionCost(quantity){return -quantity/2}
 
 //called before setup
 function preload(){}
@@ -43,7 +53,7 @@ function setup() {
   windowWidth = window.innerWidth; 
 
   //Initialize agents
-  agents = new AgentList(PARAMS.size,PARAMS.speed,PATHS,playground);
+  agents = new AgentList(PARAMS.size,PARAMS.speed,PATHS);
   agents.addAgents(PARAMS.agentCount);
 
   pane = new Tweakpane.Pane();
@@ -52,8 +62,7 @@ function setup() {
   sys.addMonitor(PARAMS, 'fps',{view: 'graph'});
 
   hlAgent = pane.addFolder({title:"Highlight Agent"});
-  updateHighlight(0);
-
+  agents.updateHighlight(OPTIONS.id);
 }
 
 //called every frame
@@ -69,22 +78,7 @@ function draw() {
   pane.refresh();
 }
 
-//updates the Highlight agent panel to highlight the new agent
-function updateHighlight(newIndex)  {
-  agents.getAgent(agents.hightlightIndex).highlight = false;
-  agents.hightlightIndex = newIndex;
-  agents.getAgent(newIndex).highlight = true;
 
-  if (agentId != null) {
-    agentId.dispose();
-    agentType.dispose();
-    agentPos.dispose();
-  }
-
-  agentId = hlAgent.addMonitor(agents.getHightlight(), 'id',{format: (v) => round(v)});
-  agentType = hlAgent.addMonitor(agents.getHightlight(), 'type');
-  agentPos = hlAgent.addInput(agents.getHightlight(), "pos", { x: {min: playground.xmin, max: playground.xmax}, y: {min: playground.ymin, max: playground.ymax}});
-}
 
 
 
@@ -94,7 +88,7 @@ function windowResized() {
   windowHeight = window.innerHeight;
   windowWidth = window.innerWidth;  
 
-  playground = {
+  PLAYGROUND = {
     xmax: window.innerWidth,
     xmin:0,
     ymax: window.innerHeight,
@@ -109,7 +103,7 @@ function mouseClicked(){
   //if clicked on an agent, switch the highlight
   for (var i = 0; i < agents.list.length; i++) {
       if (agents.getAgent(i).pointCollide(mouseX, mouseY)){
-        updateHighlight(i);
+        OPTIONS.id = i;
       }
   }
 }

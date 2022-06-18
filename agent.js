@@ -1,69 +1,7 @@
-class AgentList {
-    constructor(size, speed, paths, playground){
-        this.size = size; 
-        this.speed = speed; 
-        this.paths = paths;
-        this.list = [];
-        this.playground = playground;
-        this.hightlightIndex = 0;
-        this.lastDino = "Y";
-    }
 
-    addAgents(count){
-
-        var path, pos
-        
-        for (var i = 0; i < count; i++){
-
-            pos = {x:random(this.playground.xmin, this.playground.xmax),
-                   y:random(this.playground.ymin, this.playground.ymax)};
-
-            if (this.lastDino == "Y"){this.lastDino = "R"; path = this.paths.rdino;} 
-            else if (this.lastDino == "R") {this.lastDino = "G"; path = this.paths.gdino;}
-            else if (this.lastDino == "G"){this.lastDino = "Y"; path = this.paths.ydino;} 
-    
-            this.list.push(new Agent(this.list.length, this.lastDino ,pos, this.size , this.speed, this.playground, path));
-        }
-    }
-
-    push(agent){this.list.push(agent);}
-
-    getAgent(index){return this.list[index];}
-
-    getHightlight(){
-        return this.list[this.hightlightIndex];
-    }
-
-    draw(){
-        for (var i = 0; i < this.list.length; i++){
-            this.list[i].draw();
-        }
-    }
-
-    update(){
-        for (var i = 0; i < this.list.length; i++){
-            this.list[i].update();
-        }
-        this.checkCollide()
-    }
-
-    checkCollide(){
-
-        //Should implement quad tree or at least grid system to optimize performance
-        for (var i = 0; i < this.list.length; i++){
-            for (var j = 0; j < this.list.length; j++){
-                if( !(i==j) & this.getAgent(i).agentCollide(this.getAgent(j))){
-                    this.getAgent(i).meet(this.getAgent(j));
-                }
-            }
-        }
-    }
-}
-
-////////////////////////////////////////////////////////////////////////////////////////////////
 
 class Agent {
-    constructor(id,type,pos,size,speed,playground,path){
+    constructor(id,type,pos,size,speed,path){
         this.id = id;
         this.type = type;
         this.pos = pos;
@@ -72,8 +10,11 @@ class Agent {
         this.pic = loadImage(path);
         this.utility = 0;
         this.size = size;
-        this.playgound = playground;
-        this.hightlight = false;
+        this.coolDown = 0;
+        this.log = [];
+        this.supply = 1;
+        this.demand = 0.9;
+        this.logD = "";
 
         //somehow the picture functions cannot be called in the constructor.
     }
@@ -84,18 +25,28 @@ class Agent {
         this.pos.y += this.speed*sin(this.direction);
 
         //handle out of bounds, currently does not sync with the global playgound, so need to reset agents after screen resize
-        if (this.pos.x >= this.playgound.xmax){this.direction = PI - this.direction; this.pos.x -= this.speed};
-        if (this.pos.x <= this.playgound.xmin){this.direction = PI - this.direction; this.pos.x += this.speed};
-        if (this.pos.y >= this.playgound.ymax){this.direction = - this.direction; this.pos.y -= this.speed};
-        if (this.pos.y <= this.playgound.ymin){this.direction = - this.direction; this.pos.y += this.speed};
+        if (this.pos.x >= PLAYGROUND.xmax){this.direction = PI - this.direction; this.pos.x -= this.speed};
+        if (this.pos.x <= PLAYGROUND.xmin){this.direction = PI - this.direction; this.pos.x += this.speed};
+        if (this.pos.y >= PLAYGROUND.ymax){this.direction = - this.direction; this.pos.y -= this.speed};
+        if (this.pos.y <= PLAYGROUND.ymin){this.direction = - this.direction; this.pos.y += this.speed};
 
         //make angle stay between PI and -PI
         if (this.direction > PI){ this.direction -= 2*PI;}
         if (this.direction < -PI){ this.direction += 2*PI;}
 
-        this.pic.delay(PARAMS.gifDelay); // call a global parameter here, just too lazy...
+        this.pic.delay(PARAMS.gifDelay); //set the delay for the gif
 
         this.utility = this.utility*PARAMS.discount;
+        this.coolDown = max(0, this.coolDown - 1);
+
+        while (this.log.length > PARAMS.logLength){
+            this.log.shift();
+        }
+
+        this.logD = "";
+        for (let i = 0; i < this.log.length; i++){
+            this.logD += this.log[i] + "\n";
+        }
     }
 
     draw(){
@@ -114,12 +65,6 @@ class Agent {
             } else {image(this.pic, this.pos.x/scaling, this.pos.y/scaling);}
         pop();
         
-        // draw the highlight circle
-        if(this.highlight){
-            noFill();
-            stroke(51);
-            circle(this.pos.x, this.pos.y, this.size);
-        }
     }
 
     pointCollide(x,y){
@@ -130,19 +75,25 @@ class Agent {
         return collideCircleCircle(this.pos.x,this.pos.y,this.size, otherAgent.pos.x, otherAgent.pos.y, otherAgent.size)
     }
 
-    copy(agent){
-        this.id = agent.id;
-        this.pos = agent.pos;
-        this.speed = agent.speed;
-        this.direction = agent.direction;
-        this.pic = agent.pic;
-        this.size = agent.size;
-        this.playgound = agent.playground;
-        this.hightlight = agent.hightlight;
-        this.utility = agent.utility;
+    meet(otherAgent){
+        if (this.coolDown == 0 & otherAgent.coolDown == 0){
+            if (otherAgent.type == this.want()){
+                if (this.demand <= otherAgent.supply){
+                    this.utility += consumptionGain(this.demand);
+                    otherAgent.utility += productionCost(this.demand);
+                    this.log.push("Meet " + otherAgent.type + otherAgent.id + ", eat " + this.demand +".");
+                    otherAgent.log.push("Meet " + this.type + this.id + ", give " + this.demand +".");
+                }
+            }
+
+            this.coolDown = PARAMS.coolDown;
+            otherAgent.coolDown = PARAMS.coolDown;
+        }
     }
 
-    meet(otherAgent){
-        //Currently does nothing 
+    want(){ // Y want R's service, R want G's service, G want Y's service.
+        if (this.type == "Y"){return "R";}
+        else if (this.type == "R"){return "G";}
+        else if (this.type == "G"){return "Y";}
     }
 }
