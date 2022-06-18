@@ -85,32 +85,11 @@ class Agent {
     }
 
     meet(otherAgent){
-        if (this.coolDown == 0 & otherAgent.coolDown == 0){
-
-            //trade if type is want
-            if (otherAgent.type == this.want()){
-                if (this.demand <= otherAgent.supply & this.haveMoney == true & otherAgent.haveMoney == false){
-                    this.utility += consumptionGain(this.demand);
-                    otherAgent.utility += productionCost(this.demand);
-
-                    this.haveMoney = false;
-                    otherAgent.haveMoney = true;
-
-                    this.log.push("Trade " + otherAgent.type + otherAgent.id + ", eat " + round(this.demand*100)/100 +".");
-                    otherAgent.log.push("Trade " + this.type + this.id + ", give " + round(this.demand*100)/100 +".");
-
-                    this.coolDown = PARAMS.coolDown;
-                    otherAgent.coolDown = PARAMS.coolDown;
-
-                    //turn direction
-                    this.direction = random(-PI,PI);
-                    otherAgent.direction = PI - this.direction; // turn the other agent to face the opposite direction
-                }
-            }
+        if (this.coolDown == 0 & otherAgent.coolDown == 0 & otherAgent.type == this.want()){
+            this.trade(otherAgent);
         }
 
         if (this.learnCoolDown == 0 & otherAgent.learnCoolDown == 0){
-            
             // learn from others if they are doing well, symmetric so don't consider if I'm doing better.
             if (otherAgent.type == this.type){
                 if (this.utility < otherAgent.utility){
@@ -145,6 +124,33 @@ class Agent {
             this.demand = max(0,this.demand);
             if (this.demand > oldDemand){this.log.push("Mutate demand up.");}
             else{this.log.push("Mutate demand down.");}
+        }
+    }
+
+    trade(otherAgent){
+        if (this.haveMoney == true & otherAgent.haveMoney == false){
+            if (this.demand <= otherAgent.supply){
+                this.utility += consumptionGain(this.demand);
+                otherAgent.utility += productionCost(this.demand);
+
+                this.haveMoney = false;
+                otherAgent.haveMoney = true;
+
+                this.log.push("Trade " + otherAgent.type + otherAgent.id + ", eat " + round(this.demand*100)/100 +".");
+                otherAgent.log.push("Trade " + this.type + this.id + ", give " + round(this.demand*100)/100 +".");
+
+                this.coolDown = PARAMS.coolDown;
+                otherAgent.coolDown = PARAMS.coolDown;
+
+                //turn direction
+                this.direction = random(-PI,PI);
+                otherAgent.direction = PI - this.direction; // turn the other agent to face the opposite direction
+            } else {
+                this.log.push("Rejected by " + otherAgent.type + otherAgent.id + "'s "+ round(otherAgent.supply*100)/100 +".");
+                otherAgent.log.push("Reject " + this.type + this.id + "'s "+ round(this.demand*100)/100 + "."); 
+                this.coolDown = PARAMS.coolDown/3; // little cooldown 
+                otherAgent.coolDown = PARAMS.coolDown/3;
+            }
         }
     }
 

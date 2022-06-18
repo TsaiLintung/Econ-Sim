@@ -20,6 +20,8 @@ var PARAMS = {
 };
 let windowHeight, windowWidth;
 
+var FRAME = 0;
+
 var OPTIONS ={
   id: 1 // the highlighed agent's id. 
 }
@@ -69,7 +71,7 @@ function setup() {
   pane = new Tweakpane.Pane();
   sys = pane.addFolder({title:"System"});
   sys.addMonitor(PARAMS, 'fps',{format: (v) => round(v)});
-  sys.addMonitor(PARAMS, 'fps',{view: 'graph'});
+  sys.addMonitor(PARAMS, 'fps',{view: 'graph', frequency:1});
 
   stats = pane.addFolder({title:"Statistics"});
   stats.addMonitor(agents.stats, 'mUtility');
@@ -94,6 +96,8 @@ function draw() {
 
   //get the new values for the UI to work
   pane.refresh();
+
+  FRAME++;
 }
 
 //called when the screen is resized.

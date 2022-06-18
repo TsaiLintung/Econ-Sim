@@ -6514,6 +6514,7 @@
             const min = this.props_.get('minValue');
             const max = this.props_.get('maxValue');
             const points = [];
+
             this.value.rawValue.forEach((v, index) => {
                 if (v === undefined) {
                     return;
@@ -6539,6 +6540,7 @@
                 forceReflow(tooltipElem);
                 tooltipElem.classList.remove(className('t', 'in'));
             }
+            
         }
         onValueUpdate_() {
             this.update_();
