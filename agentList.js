@@ -50,6 +50,15 @@ class AgentList {
         
     }
 
+    update(){
+        for (var i = 0; i < this.list.length; i++){
+            this.list[i].update();
+        }
+        this.checkCollide()
+        this.updateHighlight(OPTIONS.id); 
+        this.updateStat();
+    }
+
     //updates the Highlight agent panel to highlight the new agent
     updateHighlight(newIndex) {
         if (OPTIONS.id > this.list.length){OPTIONS.id = this.hightlightIndex; return;}
@@ -93,19 +102,6 @@ class AgentList {
         this.stats.mDemand /= this.list.length;
         this.stats.mSupply /= this.list.length;
     }
-
-    update(){
-        for (var i = 0; i < this.list.length; i++){
-            this.list[i].update();
-        }
-        this.checkCollide()
-
-       
-        this.updateHighlight(OPTIONS.id); // this function is currently in global scope.
-        this.updateStat();
-    }
-
-
 
     checkCollide(){
 

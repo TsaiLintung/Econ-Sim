@@ -10,7 +10,7 @@ var PARAMS = {
   logLength: 10,
   /////////// ECONOMIC PARAMETERS ///////////
   agentCount: 100, // my computer can run at 60fps with around 120 agents.
-  discount: 0.9998,
+  discount: 0.9995,
   coolDown: 120, // Cooldown for meeting is 90 frame
   initDemand: 10,
   initSupply: 10,
