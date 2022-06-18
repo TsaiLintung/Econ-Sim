@@ -72,7 +72,7 @@ class AgentList {
         agentPos = hlAgent.addInput(this.getHighlight(), "pos", { x: {min: PLAYGROUND.xmin, max: PLAYGROUND.xmax}, y: {min: PLAYGROUND.ymin, max: PLAYGROUND.ymax}});
         agentDemand = hlAgent.addMonitor(this.getHighlight(), 'demand',{format: (v) => round(v,2)});
         agentSupply = hlAgent.addMonitor(this.getHighlight(), 'supply', {format: (v) => round(v,2)});
-        agentUtility = hlAgent.addInput(this.getHighlight(), 'utility',{format: (v) => round(v,2)});
+        agentUtility = hlAgent.addMonitor(this.getHighlight(), 'utility',{format: (v) => round(v,2)});
         agentLog = hlAgent.addMonitor(this.getHighlight(), 'logD', {multiline:true, lineCount: PARAMS.logLength});
 
         }
