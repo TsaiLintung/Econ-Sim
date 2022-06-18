@@ -85,7 +85,7 @@ class Agent {
     }
 
     meet(otherAgent){
-        if (this.coolDown == 0 & otherAgent.coolDown == 0 & otherAgent.type == this.want()){
+        if (this.coolDown == 0 & otherAgent.coolDown == 0){
             this.trade(otherAgent);
         }
 
@@ -128,35 +128,45 @@ class Agent {
     }
 
     trade(otherAgent){
-        if (this.haveMoney == true & otherAgent.haveMoney == false){
-            if (this.demand <= otherAgent.supply){
-                this.utility += consumptionGain(this.demand);
-                otherAgent.utility += productionCost(this.demand);
+        if (otherAgent.type != this.want()){return;}
+        if (!this.haveMoney){return;}
+        if (otherAgent.haveMoney){return;}
 
-                this.haveMoney = false;
-                otherAgent.haveMoney = true;
+        if (this.demand <= otherAgent.supply){
 
-                this.log.push("Trade " + otherAgent.type + otherAgent.id + ", eat " + round(this.demand*100)/100 +".");
-                otherAgent.log.push("Trade " + this.type + this.id + ", give " + round(this.demand*100)/100 +".");
+            //get corresponding utility
+            this.utility += consumptionGain(this.demand);
+            otherAgent.utility += productionCost(this.demand);
 
-                this.coolDown = PARAMS.coolDown;
-                otherAgent.coolDown = PARAMS.coolDown;
+            //exchange money
+            this.haveMoney = false;
+            otherAgent.haveMoney = true;
 
-                //turn direction
-                this.direction = random(-PI,PI);
-                otherAgent.direction = PI - this.direction; // turn the other agent to face the opposite direction
-            } else {
-                this.log.push("Rejected by " + otherAgent.type + otherAgent.id + "'s "+ round(otherAgent.supply*100)/100 +".");
-                otherAgent.log.push("Reject " + this.type + this.id + "'s "+ round(this.demand*100)/100 + "."); 
-                this.coolDown = PARAMS.coolDown/3; // little cooldown 
-                otherAgent.coolDown = PARAMS.coolDown/3;
-            }
+            //log the trade
+            this.log.push("Trade " + otherAgent.type + otherAgent.id + ", eat " + round(this.demand*100)/100 +".");
+            otherAgent.log.push("Trade " + this.type + this.id + ", give " + round(this.demand*100)/100 +".");
+
+            // cool down to avoid trade spam
+            this.coolDown = PARAMS.coolDown;
+            otherAgent.coolDown = PARAMS.coolDown;
+
+            //turn direction
+            this.direction = random(-PI,PI);
+            otherAgent.direction = PI - this.direction; // turn the other agent to face the opposite direction
+        } else {
+            this.log.push("Rejected by " + otherAgent.type + otherAgent.id + "'s "+ round(otherAgent.supply*100)/100 +".");
+            otherAgent.log.push("Reject " + this.type + this.id + "'s "+ round(this.demand*100)/100 + "."); 
+            this.coolDown = PARAMS.coolDown/3; // little cooldown 
+            otherAgent.coolDown = PARAMS.coolDown/3;
         }
     }
 
+
     want(){ // Y want R's service, R want G's service, G want Y's service.
-        if (this.type == "Y"){return "R";}
-        else if (this.type == "R"){return "G";}
-        else if (this.type == "G"){return "Y";}
+
+        // thanks Teddy Chan for the less hedious implementation.
+        color_list = ['R', 'G', 'B']
+        i = color_list.indexOf(this.color)
+        return color_list[ (i+1) % color_list.length ]
     }
 }
