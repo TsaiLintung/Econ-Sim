@@ -165,8 +165,8 @@ class Agent {
     want(){ // Y want R's service, R want G's service, G want Y's service.
 
         // thanks Teddy Chan for the less hedious implementation.
-        color_list = ['R', 'G', 'B']
-        i = color_list.indexOf(this.color)
+        let color_list = ['R', 'G', 'B']
+        let i = color_list.indexOf(this.color)
         return color_list[ (i+1) % color_list.length ]
     }
 }
