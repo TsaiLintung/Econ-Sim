@@ -53,21 +53,7 @@ class Agent {
         this.learnCoolDown = max(0, this.learnCoolDown - 1);
 
         //mutate in a very small chance
-        if (Math.random()<PARAMS.mutateRate){
-            if (Math.random()<0.5){
-                let oldSupply = this.supply; 
-                this.supply *= 1+randn_bm(-PARAMS.mutateRatio, PARAMS.mutateRatio,1);
-                this.supply = max(0,this.supply);
-                if (this.supply > oldSupply){this.log.push("Mutate supply up.");}
-                else if (this.supply < oldSupply){this.log.push("Mutate supply down.");}
-            }else{
-                let oldDemand = this.demand; 
-                this.demand *= 1+randn_bm(-PARAMS.mutateRatio, PARAMS.mutateRatio,1);
-                this.demand = max(0,this.demand);
-                if (this.demand > oldDemand){this.log.push("Mutate demand up.");}
-                else{this.log.push("Mutate demand down.");}
-            }
-        }
+        if (Math.random()<PARAMS.mutateRate){this.mutate()}
     }
 
     draw(){
@@ -115,6 +101,10 @@ class Agent {
 
                     this.coolDown = PARAMS.coolDown;
                     otherAgent.coolDown = PARAMS.coolDown;
+
+                    //turn direction
+                    this.direction = random(-PI,PI);
+                    otherAgent.direction = PI - this.direction; // turn the other agent to face the opposite direction
                 }
             }
         }
@@ -139,6 +129,22 @@ class Agent {
                     otherAgent.learnCoolDown = PARAMS.coolDown;
                 }
             }
+        }
+    }
+
+    mutate(){
+        if (Math.random()<0.5){
+            let oldSupply = this.supply; 
+            this.supply *= 1+randn_bm(-PARAMS.mutateRatio, PARAMS.mutateRatio,1);
+            this.supply = max(0,this.supply);
+            if (this.supply > oldSupply){this.log.push("Mutate supply up.");}
+            else if (this.supply < oldSupply){this.log.push("Mutate supply down.");}
+        }else{
+            let oldDemand = this.demand; 
+            this.demand *= 1+randn_bm(-PARAMS.mutateRatio, PARAMS.mutateRatio,1);
+            this.demand = max(0,this.demand);
+            if (this.demand > oldDemand){this.log.push("Mutate demand up.");}
+            else{this.log.push("Mutate demand down.");}
         }
     }
 

@@ -9,11 +9,11 @@ var PARAMS = {
   bgColor: "#FFFFF0",
   logLength: 10,
   /////////// ECONOMIC PARAMETERS ///////////
-  agentCount: 150, // my computer can run at 60fps with around 120 agents.
+  agentCount: 100, // my computer can run at 60fps with around 120 agents.
   discount: 0.9998,
   coolDown: 120, // Cooldown for meeting is 90 frame
-  initDemand: 1,
-  initSupply:1 ,
+  initDemand: 10,
+  initSupply: 10,
   mutateRate:0.0005,
   mutateRatio: 1,
   learnRate: 0.2
@@ -47,8 +47,8 @@ var moneyPic;
 var stats;
 
 //define the production and utility functions
-function consumptionGain(quantity){return quantity**(1/2)}
-function productionCost(quantity){return -quantity/2}
+function consumptionGain(quantity){return 10*Math.log(quantity)}
+function productionCost(quantity){return quantity}
 
 //called before setup
 function preload(){}
