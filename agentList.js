@@ -69,7 +69,7 @@ class AgentList {
         if (agentId != null) {
             agentId.dispose();
             agentType.dispose();
-            agentPos.dispose();
+            //agentPos.dispose();
             agentLog.dispose();
             agentUtility.dispose();
             agentDemand.dispose();
@@ -78,7 +78,7 @@ class AgentList {
     
         agentId = hlAgent.addInput(OPTIONS, 'id',{format: (v) => round(v)});
         agentType = hlAgent.addMonitor(this.getHighlight(), 'type');
-        agentPos = hlAgent.addInput(this.getHighlight(), "pos", { x: {min: PLAYGROUND.xmin, max: PLAYGROUND.xmax}, y: {min: PLAYGROUND.ymin, max: PLAYGROUND.ymax}});
+        //agentPos = hlAgent.addInput(this.getHighlight(), "pos", { x: {min: PLAYGROUND.xmin, max: PLAYGROUND.xmax}, y: {min: PLAYGROUND.ymin, max: PLAYGROUND.ymax}});
         agentDemand = hlAgent.addMonitor(this.getHighlight(), 'demand',{format: (v) => round(v,2)});
         agentSupply = hlAgent.addMonitor(this.getHighlight(), 'supply', {format: (v) => round(v,2)});
         agentUtility = hlAgent.addMonitor(this.getHighlight(), 'utility',{format: (v) => round(v,2)});

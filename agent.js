@@ -56,6 +56,22 @@ class Agent {
         if (Math.random()<PARAMS.mutateRate){this.mutate()}
     }
 
+    mutate(){
+        if (Math.random()<0.5){
+            let oldSupply = this.supply; 
+            this.supply *= 1+randn_bm(-PARAMS.mutateRatio, PARAMS.mutateRatio,1);
+            this.supply = max(0,this.supply);
+            if (this.supply > oldSupply){this.log.push("Mutate supply up.");}
+            else if (this.supply < oldSupply){this.log.push("Mutate supply down.");}
+        }else{
+            let oldDemand = this.demand; 
+            this.demand *= 1+randn_bm(-PARAMS.mutateRatio, PARAMS.mutateRatio,1);
+            this.demand = max(0,this.demand);
+            if (this.demand > oldDemand){this.log.push("Mutate demand up.");}
+            else{this.log.push("Mutate demand down.");}
+        }
+    }
+
     draw(){
 
         // draw the dino
@@ -85,88 +101,84 @@ class Agent {
     }
 
     meet(otherAgent){
-        if (this.coolDown == 0 & otherAgent.coolDown == 0){
-            this.trade(otherAgent);
-        }
-
-        if (this.learnCoolDown == 0 & otherAgent.learnCoolDown == 0){
-            // learn from others if they are doing well, symmetric so don't consider if I'm doing better.
-            if (otherAgent.type == this.type){
-                if (this.utility < otherAgent.utility){
-                    if (Math.random()>0.5){
-                        let Olddemand = this.demand;
-                        this.demand = this.demand*(1-PARAMS.learnRate)+otherAgent.demand*PARAMS.learnRate;
-                        if (this.demand > Olddemand){this.log.push("Learn " + otherAgent.type + otherAgent.id + ", demand up.");}
-                        else {this.log.push("Learn " + otherAgent.type + otherAgent.id + ", demand down.");}
-                    } else {
-                        let Oldsupply = this.supply;
-                        this.supply = this.supply*(1-PARAMS.learnRate)+otherAgent.supply*PARAMS.learnRate;
-                        if (this.supply > Oldsupply){this.log.push("Learn " + otherAgent.type + otherAgent.id + " supply up.");}
-                        else {this.log.push("Learn " + otherAgent.type + otherAgent.id + ", supply down.");}
-                    }
-                    this.learnCoolDown = PARAMS.coolDown; //cool down for learning
-                    otherAgent.learnCoolDown = PARAMS.coolDown;
-                }
-            }
-        }
-    }
-
-    mutate(){
-        if (Math.random()<0.5){
-            let oldSupply = this.supply; 
-            this.supply *= 1+randn_bm(-PARAMS.mutateRatio, PARAMS.mutateRatio,1);
-            this.supply = max(0,this.supply);
-            if (this.supply > oldSupply){this.log.push("Mutate supply up.");}
-            else if (this.supply < oldSupply){this.log.push("Mutate supply down.");}
-        }else{
-            let oldDemand = this.demand; 
-            this.demand *= 1+randn_bm(-PARAMS.mutateRatio, PARAMS.mutateRatio,1);
-            this.demand = max(0,this.demand);
-            if (this.demand > oldDemand){this.log.push("Mutate demand up.");}
-            else{this.log.push("Mutate demand down.");}
-        }
+        this.trade(otherAgent);
+        this.learn(otherAgent);
     }
 
     trade(otherAgent){
+        if (otherAgent.coolDown > 0 | this.coolDown > 0){return} //can't trade if one is cooling down.
         if (otherAgent.type != this.want()){return;}
         if (!this.haveMoney){return;}
         if (otherAgent.haveMoney){return;}
 
-        if (this.demand <= otherAgent.supply){
+        let offer = this.demand; // make the offer according to own demand
+
+        if (otherAgent.acceptOffer(this, offer)){
 
             //get corresponding utility
-            this.utility += consumptionGain(this.demand);
-            otherAgent.utility += productionCost(this.demand);
+            this.utility += consumptionGain(offer);
+            otherAgent.utility += productionCost(offer);
 
             //exchange money
             this.haveMoney = false;
             otherAgent.haveMoney = true;
 
             //log the trade
-            this.log.push("Trade " + otherAgent.type + otherAgent.id + ", eat " + round(this.demand*100)/100 +".");
-            otherAgent.log.push("Trade " + this.type + this.id + ", give " + round(this.demand*100)/100 +".");
-
-            // cool down to avoid trade spam
+            this.log.push("Trade " + otherAgent.type + otherAgent.id + ", eat " + round(offer*100)/100 +".");
+    
+            // cooldown to avoid trade spam
             this.coolDown = PARAMS.coolDown;
-            otherAgent.coolDown = PARAMS.coolDown;
-
-            //turn direction
-            this.direction = random(-PI,PI);
-            otherAgent.direction = PI - this.direction; // turn the other agent to face the opposite direction
+            
         } else {
             this.log.push("Rejected by " + otherAgent.type + otherAgent.id + "'s "+ round(otherAgent.supply*100)/100 +".");
-            otherAgent.log.push("Reject " + this.type + this.id + "'s "+ round(this.demand*100)/100 + "."); 
-            this.coolDown = PARAMS.coolDown/3; // little cooldown 
-            otherAgent.coolDown = PARAMS.coolDown/3;
+            this.coolDown = PARAMS.coolDown/6; // little cooldown for rejection
         }
-    }
 
+        //turn direction to avoid multiple collision
+        this.direction = random(-PI,PI);
+    }
 
     want(){ // Y want R's service, R want G's service, G want Y's service.
 
-        // thanks Teddy Chan for the less hedious implementation.
         if (this.type == "Y"){return "R";}
         else if (this.type == "R"){return "G";}
         else if (this.type == "G"){return "Y";}
+    }
+
+    acceptOffer(offerAgent, offer){
+        if (this.supply >= offer){ //accept the offer if it is lower than own supply
+            this.log.push("Trade " + offerAgent.type + offerAgent.id + ", give " + round(offer*100)/100 +".");
+            this.direction = random(-PI,PI);
+            this.coolDown = PARAMS.coolDown;
+            return true;
+        }
+        else {
+            this.log.push("Reject " + offerAgent.type + offerAgent.id + "'s "+ round(offer*100)/100 + "."); 
+            this.direction = random(-PI,PI);
+            this.coolDown = PARAMS.coolDown/6;
+            return false;
+        }
+    }
+
+    learn(otherAgent){
+        if (this.learnCoolDown > 0 | otherAgent.learnCoolDown > 0){return} //can't learn if one is cooling down.
+        if (otherAgent.type != this.type){return} //can't learn if they are different types
+        if (otherAgent.utility < this.utility){return} //can't learn if the other agent is not doing well
+
+        if (Math.random()>0.5){
+            let Olddemand = this.demand;
+            this.demand = this.demand*(1-PARAMS.learnRate)+otherAgent.demand*PARAMS.learnRate;
+            if (this.demand > Olddemand){this.log.push("Learn " + otherAgent.type + otherAgent.id + ", demand up.");}
+            else {this.log.push("Learn " + otherAgent.type + otherAgent.id + ", demand down.");}
+        } else {
+            let Oldsupply = this.supply;
+            this.supply = this.supply*(1-PARAMS.learnRate)+otherAgent.supply*PARAMS.learnRate;
+            if (this.supply > Oldsupply){this.log.push("Learn " + otherAgent.type + otherAgent.id + " supply up.");}
+            else {this.log.push("Learn " + otherAgent.type + otherAgent.id + ", supply down.");}
+        }
+        
+        this.learnCoolDown = PARAMS.coolDown; //cool down for learning
+        otherAgent.learnCoolDown = PARAMS.coolDown;
+
     }
 }
