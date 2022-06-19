@@ -70,11 +70,14 @@ function setup() {
 }
 
 //initialize UI elements
-var pane, sys;
+var pane = null, sys;
 var agentId = null, agentType, agentUtility ,agentPos, agentLog,hlAgent,agentDemand, agentSupply;
 var stats, sim, resetButton;
 
 function setupUI(){ //the highlight UI is in agents.js
+
+  if (pane != null){pane.dispose();}
+
   pane = new Tweakpane.Pane();
   sys = pane.addFolder({title:"System"});
   sys.addMonitor(PARAMS, 'fps',{format: (v) => round(v)});
@@ -90,7 +93,7 @@ function setupUI(){ //the highlight UI is in agents.js
 
   resetButton.on('click', () => {
     setupAgent();
-    print("reset!!");
+    setupUI();
   });
 
   stats = pane.addFolder({title:"Statistics"});
